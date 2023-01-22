@@ -1,0 +1,90 @@
+version: '3.9'
+name: tor-clone
+services:
+
+# ==== DIRECTORY ====
+
+  directory:
+    build: 
+      context: ./directory
+      dockerfile: directory.Dockerfile
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 5s
+      timeout: 15s
+      retries: 5
+
+# ==================
+
+# ==== CLIENT ====
+
+  client:
+    build:
+      context: ./client
+      dockerfile: client.Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      directory:
+        condition: service_healthy
+
+# ==================
+
+# ==== END SERVER ====
+
+  end-server:
+    build: 
+      context: ./end_server
+      dockerfile: end_server.Dockerfile
+    ports:
+      - "8082:8080"
+    depends_on:
+      directory:
+        condition: service_healthy
+        
+# ==================
+
+# ==== ENTRY NODES =====
+
+  entry-0: 
+    build:
+      context: .
+      dockerfile: entry/entry.Dockerfile
+    environment:
+      - PORT=9999  # Podemos especificar el puerto que queremos usar
+    depends_on:
+      directory:
+        condition: service_healthy
+
+# ==================
+
+# ==== RELAY NODES ====
+
+  relay-0:
+    build:
+      context: .
+      dockerfile: relay/relay.Dockerfile
+    environment:
+      - PORT=9989
+    depends_on:
+      directory:
+        condition: service_healthy
+
+
+# ==================
+
+# ==== EXIT NODES ====
+
+  exit-0:
+    build:
+      context: .
+      dockerfile: exit/exit.Dockerfile
+    environment:
+      - PORT=3454
+    depends_on:
+      directory:
+        condition: service_healthy
+        
+# ==================
