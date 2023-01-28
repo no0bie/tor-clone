@@ -6,8 +6,8 @@ services:
 
   client:
     build:
-      context: ./client
-      dockerfile: client.Dockerfile
+      context: .
+      dockerfile: ./client/client.Dockerfile
     ports:
       - "8080:8080" # This is forwarding the connection to port 8080 in local machine, if there was any port collision just change it to "yourport:8080"
     depends_on:

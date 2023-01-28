@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
 	"crypto/rand"
 	b64 "encoding/base64"
 	"encoding/binary"
@@ -92,52 +90,20 @@ func calc_dh(recv []string) ([]big.Int, big.Int) {
 	return secrets, *X
 }
 
-// Generate the 256-bit key, if the secret is less than 256-bit add padding, if its bigger trim it
-func gen_key(secret big.Int) []byte {
-	secret_bytes := []byte(secret.String())
-
-	key := []byte{}
-
-	if len(secret_bytes) < 32 {
-		key = append(key, secret_bytes...)
-		key = append(key, make([]byte, 32-len((secret_bytes)))...)
-	} else {
-		key = []byte(secret.String())[:32]
-	}
-	return key
-}
-
 // Encrypt the query with AES-GCM (Galois/Counter Mode)
-func encrypt(secrets []big.Int, msg string) []byte {
+func encrypt_all(secrets []big.Int, msg string) []byte {
 	msg_bytes := []byte(msg)
 
 	for _, secret := range secrets {
-		key := gen_key(secret)
-
-		block, _ := aes.NewCipher(key) // Create the AES cipher
-
-		gcm, _ := cipher.NewGCM(block) // Create the GCM (Galois/Counter Mode)
-
-		nonce := make([]byte, gcm.NonceSize())
-
-		msg_bytes = gcm.Seal(nil, nonce, msg_bytes, nil) // Encryption
+		msg_bytes = encrypt(secret, msg_bytes)
 	}
 	return msg_bytes
 }
 
 // Decrypt the response with AES-GCM (Galois/Counter Mode)
-func decrypt(secrets []big.Int, encrypted []byte) string {
+func decrypt_all(secrets []big.Int, encrypted []byte) string {
 	for _, secret := range secrets {
-
-		key := gen_key(secret)
-
-		block, _ := aes.NewCipher(key) // Create the AES cipher
-
-		gcm, _ := cipher.NewGCM(block) // Create the GCM (Galois/Counter Mode)
-
-		nonce := make([]byte, gcm.NonceSize())
-
-		encrypted, _ = gcm.Open(nil, nonce, encrypted, nil)
+		encrypted = decrypt(secret, encrypted)
 
 	}
 
@@ -246,7 +212,7 @@ func connection_handler(entry, relay_exit, msg string) string {
 
 	send(connection, []byte(to_send.String()))
 
-	encrypted_data := encrypt(encryption_secrets, msg)
+	encrypted_data := encrypt_all(encryption_secrets, msg)
 	encrypted_dat_tmp := encrypted_data
 	fmt.Println("\n > New Query:")
 
@@ -262,7 +228,7 @@ func connection_handler(entry, relay_exit, msg string) string {
 
 	encrypted_layer_1_2_3 := recv(connection)
 
-	response := decrypt(reverse(encryption_secrets), encrypted_layer_1_2_3)
+	response := decrypt_all(reverse(encryption_secrets), encrypted_layer_1_2_3)
 	fmt.Println("========= Decoded Response =========")
 	fmt.Println(response)
 

@@ -22,8 +22,8 @@ services:
 
   client:
     build:
-      context: ./client
-      dockerfile: client.Dockerfile
+      context: .
+      dockerfile: ./client/client.Dockerfile
     ports:
       - "8080:8080"
     depends_on:
