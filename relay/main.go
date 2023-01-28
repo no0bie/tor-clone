@@ -56,6 +56,10 @@ func process_entry(entry_conn net.Conn) {
 
 	decrypted_layer_2 := decrypt(*secret, MSG_buffer)
 
+	fmt.Println("=============================================")
+	fmt.Println("Decrypting data with layer 2 secret: ")
+	fmt.Println(decrypted_layer_2)
+
 	send(exit_conn, []byte(decrypted_layer_2), max_length)
 
 	encrypted_layer_3 := recv(exit_conn, max_length)

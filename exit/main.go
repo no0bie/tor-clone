@@ -48,6 +48,12 @@ func process_entry(relay_conn net.Conn) {
 
 	msg := string(decrypted_layer_3)
 
+	fmt.Println("=============================================")
+	fmt.Println("Decrypting data with layer 3 secret: ")
+	fmt.Println(" - String -> " + msg)
+	fmt.Print(" - Bytes -> ")
+	fmt.Println(decrypted_layer_3)
+
 	new_msg := []byte{}
 
 	// match, _ := regexp.MatchString("^[http://|https://].*$", msg) -> Pointer failing after few requests, decided to go for a simpler approach
